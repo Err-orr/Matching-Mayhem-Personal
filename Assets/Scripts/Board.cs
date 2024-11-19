@@ -28,6 +28,7 @@ public class TileType {
 
 public class Board : MonoBehaviour
 {
+    [Header("Board Settings")]
     public GameState currentState = GameState.move; // Current state of the game
     public int width; // Width of the board in terms of columns
     public int height; // Height of the board in terms of rows
@@ -36,12 +37,15 @@ public class Board : MonoBehaviour
     public GameObject breakableTilePrefab; // Prefab for creating breakable tiles
     private bool[,] blankSpaces; // 2D array to track blank spaces on the board
     private BackgroundTile[,] breakableTiles; // 2D array to hold breakable tile references
+
+    [Header("Dot Settings")]
+    public GameObject destroyEffect; // Effect to display when a dot is destroyed
+    public Dot currentDot; // Reference to the currently selected dot
     public GameObject[] dots; // Array of available dot prefabs
     public GameObject[,] allDots; // 2D array to hold all the dots currently on the board
     public TileType[] boardLayout; // Array to define the layout of the board
     private FindMatches findMatches; // Reference to the FindMatches script for detecting matches
-    public GameObject destroyEffect; // Effect to display when a dot is destroyed
-    public Dot currentDot; // Reference to the currently selected dot
+
 
     // Start is called before the first frame update
     void Start()
@@ -344,16 +348,166 @@ public class Board : MonoBehaviour
     }
 
     // Coroutine to fill the board with new dots after destroying matches
-    private IEnumerator FillBoardCo() {
-        RefillBoard(); // Refill the board with new dots
-        yield return new WaitForSeconds(.2f); // Wait for 0.2 seconds before checking for matches
-        // Continuously check for new matches on the board
-        while (MatchesOnBoard()) { 
+    private IEnumerator FillBoardCo()
+    {
+        RefillBoard(); // Refill the board with new dots after clearing any matches
+        yield return new WaitForSeconds(.2f); // Wait for 0.2 seconds before checking for new matches
+                                              // Continuously check for new matches on the board and destroy them if found
+        while (MatchesOnBoard())
+        {
             yield return new WaitForSeconds(.2f); // Wait before checking for matches again
-            DestroyMatches(); // Destroy any new matches found
+            DestroyMatches(); // Destroy any new matches found on the board
         }
-        findMatches.currentMatches.Clear(); // Clear the matches list after refilling
-        yield return new WaitForSeconds(.2f); // Wait before allowing player moves again
-        currentState = GameState.move; // Set the state to allow player moves
+        findMatches.currentMatches.Clear(); // Clear the list of matches after refilling
+        yield return new WaitForSeconds(.2f); // Wait briefly before allowing player moves again
+                                              // If the board is deadlocked, shuffle it to ensure more valid moves
+        if (IsDeadlocked())
+        {
+            ShuffleBoard();
+            Debug.Log("Deadlocked!!! :D"); // Log that the board was shuffled due to deadlock
+        }
+        currentState = GameState.move; // Set the game state to allow player to make moves again
+    }
+
+    // Switch the positions of two dots on the board
+    private void SwitchPieces(int column, int row, UnityEngine.Vector2 direction)
+    {
+        // Temporarily hold the dot at the new position
+        GameObject holder = allDots[column + (int)direction.x, row + (int)direction.y] as GameObject;
+        // Move the dot from its original position to the new position
+        allDots[column + (int)direction.x, row + (int)direction.y] = allDots[column, row];
+        // Place the dot from the new position back to the original position
+        allDots[column, row] = holder;
+    }
+
+    // Check if there are any valid matches (3 or more dots in a row/column)
+    private bool CheckForMatches()
+    {
+        // Loop through each cell on the board to check for horizontal and vertical matches
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                if (allDots[i, j] != null)
+                {
+                    // Check for horizontal matches (3 or more dots in a row)
+                    if (i < width - 2)
+                    {
+                        if (allDots[i + 1, j] != null && allDots[i + 2, j] != null)
+                        {
+                            if (allDots[i + 1, j].tag == allDots[i, j].tag && allDots[i + 2, j].tag == allDots[i, j].tag)
+                            {
+                                return true; // Match found horizontally
+                            }
+                        }
+                    }
+                    // Check for vertical matches (3 or more dots in a column)
+                    if (j < height - 2)
+                    {
+                        if (allDots[i, j + 1] != null && allDots[i, j + 2] != null)
+                        {
+                            if (allDots[i, j + 1].tag == allDots[i, j].tag && allDots[i, j + 2].tag == allDots[i, j].tag)
+                            {
+                                return true; // Match found vertically
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false; // No matches found
+    }
+
+    // Switch two adjacent dots and check if a match occurs
+    private bool SwitchAndCheck(int column, int row, UnityEngine.Vector2 direction)
+    {
+        SwitchPieces(column, row, direction); // Swap the two dots
+                                              // Check if the swap resulted in a match
+        if (CheckForMatches())
+        {
+            SwitchPieces(column, row, direction); // If a match is found, revert the swap
+            return true; // Return true if the swap resulted in a match
+        }
+        SwitchPieces(column, row, direction); // If no match, revert the swap
+        return false; // Return false if no match was found
+    }
+
+    // Check if the board is deadlocked (no possible matches or valid moves)
+    private bool IsDeadlocked()
+    {
+        // Loop through every dot on the board and check if a valid move is possible
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                if (allDots[i, j] != null)
+                {
+                    // Check for a valid move to the right
+                    if (i < width - 1)
+                    {
+                        if (SwitchAndCheck(i, j, UnityEngine.Vector2.right))
+                        {
+                            return false; // A valid move was found, so it's not deadlocked
+                        }
+                    }
+                    // Check for a valid move upwards
+                    if (j < height - 1)
+                    {
+                        if (SwitchAndCheck(i, j, UnityEngine.Vector2.up))
+                        {
+                            return false; // A valid move was found, so it's not deadlocked
+                        }
+                    }
+                }
+            }
+        }
+        return true; // No valid moves were found, the board is deadlocked
+    }
+
+    // Shuffle the board when it's deadlocked to ensure valid moves can be made
+    private void ShuffleBoard()
+    {
+        List<GameObject> newBoard = new List<GameObject>();
+        // Add all non-null dots to the newBoard list
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                if (allDots[i, j] != null)
+                {
+                    newBoard.Add(allDots[i, j]);
+                }
+            }
+        }
+
+        // Shuffle the board by placing new random dots in the available spaces
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                if (!blankSpaces[i, j]) // Only place dots in non-blank spaces
+                {
+                    int pieceToUse = Random.Range(0, newBoard.Count); // Randomly select a new dot
+                    int maxIterations = 0; // Counter to prevent infinite loops when checking for adjacent matches
+                                           // Ensure the randomly selected dot does not match any adjacent dots
+                    while (MatchesAt(i, j, newBoard[pieceToUse]) && maxIterations < 100)
+                    {
+                        pieceToUse = Random.Range(0, newBoard.Count); // Select a new dot if it matches an adjacent one
+                        maxIterations++; // Increment iteration count to avoid infinite loop
+                    }
+                    maxIterations = 0; // Reset counter for potential future use
+                    Dot piece = newBoard[pieceToUse].GetComponent<Dot>();
+                    piece.column = i;
+                    piece.row = j;
+                    allDots[i, j] = newBoard[pieceToUse]; // Place the new dot on the board
+                    newBoard.Remove(newBoard[pieceToUse]); // Remove the selected dot from the newBoard list
+                }
+            }
+        }
+        // If the board is still deadlocked after shuffling, try shuffling again
+        if (IsDeadlocked())
+        {
+            ShuffleBoard();
+        }
     }
 }

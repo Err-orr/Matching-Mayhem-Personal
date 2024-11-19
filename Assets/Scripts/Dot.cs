@@ -12,6 +12,8 @@ public class Dot : MonoBehaviour
     public int row; // Current row index of the dot on the board
     public int previousColumn; // Previous column index for reverting moves
     public int previousRow; // Previous row index for reverting moves
+
+    [Header("Position Variables")]
     public int targetX; // Target X position for smooth movement
     public int targetY; // Target Y position for smooth movement
     public bool isMatched = false; // Flag indicating if the dot is part of a match

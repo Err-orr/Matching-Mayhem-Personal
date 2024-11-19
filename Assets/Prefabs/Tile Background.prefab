@@ -74,7 +74,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 50efe4dcb07a14c4d9b79226547b3168, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 86ecbab3e895e467db12434659a247a6, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -97,12 +97,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bd6a8a73106f4b85852f12052a42b0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dots:
-  - {fileID: 5765407513363869183, guid: bfd7f8ff112434680b226987554c09f6, type: 3}
-  - {fileID: 603870553154631593, guid: b895b970997ea4cfd8e34c1c08fc4b10, type: 3}
-  - {fileID: 6658201395674459632, guid: 251bc0caa6f7549499bf2927a6457c5f, type: 3}
-  - {fileID: 3982149111140494644, guid: 2d3ff67e1659549ff8c1d5600cbab80a, type: 3}
-  - {fileID: 2551103422870621153, guid: 118bae361a37244298094d8770080933, type: 3}
-  - {fileID: 4680134612299453725, guid: 78e8335eb63dd4bdb8df73df155a185a, type: 3}
-  - {fileID: 8934703428140957786, guid: 7c0d114601532462cb274408f2c88423, type: 3}
-  - {fileID: 3372784269393422720, guid: 10ffa619050494319957aaa76c6d4c3f, type: 3}
+  hitPoints: 1

@@ -25,6 +25,7 @@ public class Dot : MonoBehaviour
     public float swipeAngle = 0; // Angle of the swipe for determining movement direction
     public float swipeResist = 1f; // Resistance threshold for swipe detection
     private FindMatches findMatches; // Reference to the FindMatches script for checking matches
+    private HintManager hintManager;
     
     [Header("Power Up Variables")]
     public bool isColorBomb; // Flag indicating if this dot is a color bomb power-up
@@ -45,6 +46,7 @@ public class Dot : MonoBehaviour
         isAdjacentBomb = false; // Initialize adjacent bomb status
         board = FindObjectOfType<Board>(); // Find and reference the Board in the scene
         findMatches = FindObjectOfType<FindMatches>(); // Reference to the FindMatches instance
+        hintManager = FindObjectOfType<HintManager>();
     }
 
     // Handles right-click to create an adjacent bomb for debugging purposes
@@ -128,6 +130,9 @@ public class Dot : MonoBehaviour
 
     // Handle mouse down event for initiating touch input
     private void OnMouseDown() {
+        if (hintManager != null) {
+            hintManager.DestroyHint();
+        }
         if (board.currentState == GameState.move) {
             firstTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition); // Get initial touch position
         }

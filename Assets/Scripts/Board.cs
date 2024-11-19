@@ -45,12 +45,16 @@ public class Board : MonoBehaviour
     public GameObject[,] allDots; // 2D array to hold all the dots currently on the board
     public TileType[] boardLayout; // Array to define the layout of the board
     private FindMatches findMatches; // Reference to the FindMatches script for detecting matches
+    public int basePieceValue = 20;
+    private int streakValue = 1;
+    private ScoreManager scoreManager;
 
 
     // Start is called before the first frame update
     void Start()
     {
         // Initialize arrays and references
+        scoreManager = FindObjectOfType<ScoreManager>();
         breakableTiles = new BackgroundTile[width, height];
         findMatches = FindObjectOfType<FindMatches>(); // Retrieve the FindMatches component from the scene
         blankSpaces = new bool[width, height]; // Initialize the 2D array for blank spaces
@@ -91,8 +95,9 @@ public class Board : MonoBehaviour
                 if (!blankSpaces[i, j]) { // Check if the current space is not blank
                     // Calculate the position for the tile based on its index
                     UnityEngine.Vector2 tempPosition = new(i, j + offSet); 
+                    UnityEngine.Vector2 tilePosition = new UnityEngine.Vector2(i, j);
                     // Instantiate a new background tile
-                    GameObject backgroundTile = Instantiate(tilePrefab, tempPosition, UnityEngine.Quaternion.identity);
+                    GameObject backgroundTile = Instantiate(tilePrefab, tilePosition, UnityEngine.Quaternion.identity);
                     backgroundTile.transform.parent = this.transform; // Set the parent of the tile to the board for hierarchy organization
                     backgroundTile.name = "( " + i + ", " + j + " )"; // Name the tile for debugging purposes
                     
@@ -255,6 +260,7 @@ public class Board : MonoBehaviour
             GameObject particle = Instantiate(destroyEffect, allDots[column, row].transform.position, UnityEngine.Quaternion.identity);
             Destroy(particle, .5f); // Destroy the effect after 0.5 seconds
             Destroy(allDots[column, row]); // Remove the matched dot from the board
+            scoreManager.IncreaseScore(basePieceValue * streakValue);
             allDots[column, row] = null; // Set the array position to null for cleanup
         }
     }
@@ -352,21 +358,23 @@ public class Board : MonoBehaviour
     {
         RefillBoard(); // Refill the board with new dots after clearing any matches
         yield return new WaitForSeconds(.2f); // Wait for 0.2 seconds before checking for new matches
-                                              // Continuously check for new matches on the board and destroy them if found
+        // Continuously check for new matches on the board and destroy them if found
         while (MatchesOnBoard())
         {
+            streakValue++;
             yield return new WaitForSeconds(.2f); // Wait before checking for matches again
             DestroyMatches(); // Destroy any new matches found on the board
         }
         findMatches.currentMatches.Clear(); // Clear the list of matches after refilling
         yield return new WaitForSeconds(.2f); // Wait briefly before allowing player moves again
-                                              // If the board is deadlocked, shuffle it to ensure more valid moves
+        // If the board is deadlocked, shuffle it to ensure more valid moves
         if (IsDeadlocked())
         {
             ShuffleBoard();
             Debug.Log("Deadlocked!!! :D"); // Log that the board was shuffled due to deadlock
         }
         currentState = GameState.move; // Set the game state to allow player to make moves again
+        streakValue = 1;
     }
 
     // Switch the positions of two dots on the board
@@ -419,7 +427,7 @@ public class Board : MonoBehaviour
     }
 
     // Switch two adjacent dots and check if a match occurs
-    private bool SwitchAndCheck(int column, int row, UnityEngine.Vector2 direction)
+    public bool SwitchAndCheck(int column, int row, UnityEngine.Vector2 direction)
     {
         SwitchPieces(column, row, direction); // Swap the two dots
                                               // Check if the swap resulted in a match

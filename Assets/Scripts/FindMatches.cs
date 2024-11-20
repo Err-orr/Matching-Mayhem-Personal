@@ -155,8 +155,10 @@ public class FindMatches : MonoBehaviour
             for (int j = row - 1; j <= row + 1; j++) {
                 // Ensure the indices are within the board's bounds
                 if (i >= 0 && i < board.width && j >= 0 && j < board.height) {
-                    dots.Add(board.allDots[i, j]); // Add the dot to the list
-                    board.allDots[i, j].GetComponent<Dot>().isMatched = true; // Mark the dot as matched
+                    if (board.allDots[i, j] != null) {
+                        dots.Add(board.allDots[i, j]); // Add the dot to the list
+                        board.allDots[i, j].GetComponent<Dot>().isMatched = true; // Mark the dot as matched
+                    }
                 }
             }
         }
@@ -168,8 +170,12 @@ public class FindMatches : MonoBehaviour
         List<GameObject> dots = new List<GameObject>();
         for (int i = 0; i < board.height; i++) {
             if (board.allDots[column, i] != null) {
+                Dot dot = board.allDots[column, i].GetComponent<Dot>();
+                if (dot.isRowBomb) {
+                    dots.Union(GetRowPieces(i)).ToList();
+                }
                 dots.Add(board.allDots[column, i]); // Add the dot to the list
-                board.allDots[column, i].GetComponent<Dot>().isMatched = true; // Mark the dot as matched
+                dot.isMatched = true; // Mark the dot as matched
             }
         }
         return dots; // Return the list of dots
@@ -180,8 +186,12 @@ public class FindMatches : MonoBehaviour
         List<GameObject> dots = new List<GameObject>();
         for (int i = 0; i < board.width; i++) {
             if (board.allDots[i, row] != null) {
+                Dot dot = board.allDots[i, row].GetComponent<Dot>();
+                if (dot.isColumnBomb) {
+                    dots.Union(GetColumnPieces(i)).ToList();
+                }
                 dots.Add(board.allDots[i, row]); // Add the dot to the list
-                board.allDots[i, row].GetComponent<Dot>().isMatched = true; // Mark the dot as matched
+                dot.isMatched = true; // Mark the dot as matched
             }
         }
         return dots; // Return the list of dots

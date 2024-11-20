@@ -37,23 +37,29 @@ public class Board : MonoBehaviour
     public GameObject breakableTilePrefab; // Prefab for creating breakable tiles
     private bool[,] blankSpaces; // 2D array to track blank spaces on the board
     private BackgroundTile[,] breakableTiles; // 2D array to hold breakable tile references
+    public float refillDelay = 0.5f;
 
     [Header("Dot Settings")]
     public GameObject destroyEffect; // Effect to display when a dot is destroyed (e.g., animation, particle effect)
     public Dot currentDot; // Reference to the currently selected dot on the board
+    public int basePieceValue = 20; // Base score value for each dot (used for scoring)
     public GameObject[] dots; // Array of available dot prefabs, each representing a different type of dot
     public GameObject[,] allDots; // 2D array that holds all the dots currently on the board
     public TileType[] boardLayout; // Array defining the layout of the board (e.g., background tiles, empty spaces, etc.)
     private FindMatches findMatches; // Reference to the FindMatches script, used for detecting matching dots
-    public int basePieceValue = 20; // Base score value for each dot (used for scoring)
     private int streakValue = 1; // Multiplier for consecutive matches (combo streak)
     private ScoreManager scoreManager; // Reference to the ScoreManager for updating the score
+    private SoundManager soundManager;
+
+    [Header("Level Settings")]
+    public int[] scoreGoals;
 
 
     // Start is called before the first frame update
     void Start()
     {
         // Initialize references and arrays
+        soundManager = FindObjectOfType<SoundManager>();
         scoreManager = FindObjectOfType<ScoreManager>(); // Find and cache the ScoreManager in the scene to update the score
         breakableTiles = new BackgroundTile[width, height]; // Initialize a 2D array to hold the background tiles (e.g., breakable, unbreakable)
         findMatches = FindObjectOfType<FindMatches>(); // Retrieve the FindMatches component that will handle match logic
@@ -285,7 +291,9 @@ public class Board : MonoBehaviour
                     breakableTiles[column, row] = null; // Clear the reference if destroyed
                 }
             }
-            
+            if (soundManager != null) {
+                soundManager.PlayRandomDestroyNoise();
+            }
             // Instantiate a destruction effect at the matched dot's position
             GameObject particle = Instantiate(destroyEffect, allDots[column, row].transform.position, UnityEngine.Quaternion.identity);
             Destroy(particle, .5f); // Destroy the effect after 0.5 seconds
@@ -327,7 +335,7 @@ public class Board : MonoBehaviour
                 }
             }
         }
-        yield return new WaitForSeconds(.4f); // Wait for 0.4 seconds before refilling the board
+        yield return new WaitForSeconds(refillDelay * 0.5f); // Wait for 0.4 seconds before refilling the board
         StartCoroutine(FillBoardCo()); // Start coroutine to fill the board with new dots
     }
 
@@ -346,7 +354,7 @@ public class Board : MonoBehaviour
             }
             nullCount = 0; // Reset null count for the next column
         }
-        yield return new WaitForSeconds(.4f); // Wait for 0.4 seconds before refilling the board
+        yield return new WaitForSeconds(refillDelay * 0.5f); // Wait for 0.4 seconds before refilling the board
         StartCoroutine(FillBoardCo()); // Start coroutine to fill the board with new dots
     }
 
@@ -359,6 +367,12 @@ public class Board : MonoBehaviour
                     // Set the new position for the dot
                     UnityEngine.Vector2 tempPosition = new UnityEngine.Vector2(i, j + offSet); 
                     int dotToUse = Random.Range(0, dots.Length); // Randomly select a dot prefab
+                    int maxIterations = 0;
+                    while (MatchesAt(i, j, dots[dotToUse]) && maxIterations < 100) {
+                        maxIterations++;
+                        dotToUse = Random.Range(0, dots.Length); // Randomly select a dot prefab
+                    }
+                    maxIterations = 0;
                     // Instantiate a new dot at the calculated position
                     GameObject piece = Instantiate(dots[dotToUse], tempPosition, UnityEngine.Quaternion.identity); 
                     allDots[i, j] = piece; // Store the new dot in the array
@@ -390,26 +404,24 @@ public class Board : MonoBehaviour
         RefillBoard();
 
         // Wait for a short period (0.2 seconds) to allow the board to settle before checking for new matches
-        yield return new WaitForSeconds(0.2f);
+        yield return new WaitForSeconds(refillDelay);
 
         // Continuously check for new matches on the board until no more are found
         while (MatchesOnBoard())
         {
             // Increment the streak value to reward consecutive matches
             streakValue++;
-
-            // Wait briefly (0.2 seconds) before rechecking for any matches
-            yield return new WaitForSeconds(0.2f);
-
             // Destroy any new matches found on the board
             DestroyMatches();
+            // Wait briefly (0.2 seconds) before rechecking for any matches
+            yield return new WaitForSeconds(2 * refillDelay);            
         }
 
         // After processing matches, clear the list of currently detected matches in the FindMatches component
         findMatches.currentMatches.Clear();
 
         // Wait briefly (0.2 seconds) before allowing the player to make moves again
-        yield return new WaitForSeconds(0.2f);
+        yield return new WaitForSeconds(refillDelay);
 
         // If the board is deadlocked (no valid moves are available), shuffle the board to create new possibilities
         if (IsDeadlocked())

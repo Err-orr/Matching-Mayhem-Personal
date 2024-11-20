@@ -262,6 +262,7 @@ public class Dot : MonoBehaviour
         isColorBomb = true; // Set color bomb flag
         GameObject color = Instantiate(colorBomb, transform.position, UnityEngine.Quaternion.identity);
         color.transform.parent = this.transform; // Set color bomb as a child of this dot
+        this.gameObject.tag = "Color";
     }
 
     // Method to create an adjacent bomb power-up

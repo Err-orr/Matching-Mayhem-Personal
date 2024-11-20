@@ -5,14 +5,15 @@ using UnityEngine.UI;
 
 public class ScoreManager : MonoBehaviour
 {
+    private Board board;
     public Text scoreText; // Reference to the UI Text component that displays the score
     public int score; // The player's current score
+    public Image scoreBar;
 
     // Start is called before the first frame update
     void Start()
     {
-        // The Start method is currently empty, but it could be used to initialize any necessary values or settings
-        // For example, you could set the initial score here if needed (e.g., score = 0).
+        board = FindObjectOfType<Board>();
     }
 
     // Update is called once per frame
@@ -26,5 +27,9 @@ public class ScoreManager : MonoBehaviour
     public void IncreaseScore(int amountToIncrease)
     {
         score += amountToIncrease; // Increase the score by the specified amount
+        if (board != null && scoreBar != null) {
+            int length = board.scoreGoals.Length;
+            scoreBar.fillAmount = (float) score / (float) board.scoreGoals[length - 1];
+        } 
     }
 }

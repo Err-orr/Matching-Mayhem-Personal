@@ -25,7 +25,7 @@ public class Dot : MonoBehaviour
     public float swipeAngle = 0; // Angle of the swipe for determining movement direction
     public float swipeResist = 1f; // Resistance threshold for swipe detection
     private FindMatches findMatches; // Reference to the FindMatches script for checking matches
-    private HintManager hintManager;
+    private HintManager hintManager; // Reference to the HintManager script for generating hints on matches
     
     [Header("Power Up Variables")]
     public bool isColorBomb; // Flag indicating if this dot is a color bomb power-up
@@ -46,7 +46,7 @@ public class Dot : MonoBehaviour
         isAdjacentBomb = false; // Initialize adjacent bomb status
         board = FindObjectOfType<Board>(); // Find and reference the Board in the scene
         findMatches = FindObjectOfType<FindMatches>(); // Reference to the FindMatches instance
-        hintManager = FindObjectOfType<HintManager>();
+        hintManager = FindObjectOfType<HintManager>(); // Reference to the HintManager instance
     }
 
     // Handles right-click to create an adjacent bomb for debugging purposes
@@ -128,15 +128,23 @@ public class Dot : MonoBehaviour
         }
     }
 
-    // Handle mouse down event for initiating touch input
-    private void OnMouseDown() {
-        if (hintManager != null) {
-            hintManager.DestroyHint();
+    // Handle mouse down event for initiating touch input (used for detecting when the player clicks or taps)
+    private void OnMouseDown()
+    {
+        // If a hint manager exists, destroy any active hints to ensure they don't interfere with the current input
+        if (hintManager != null)
+        {
+            hintManager.DestroyHint(); // Destroy any visual hints to prevent the player from being distracted by them
         }
-        if (board.currentState == GameState.move) {
-            firstTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition); // Get initial touch position
+
+        // Check if the current game state allows the player to make a move (i.e., the game is not in a state like "waiting" or "paused")
+        if (board.currentState == GameState.move)
+        {
+            // Get the initial touch or mouse position in world space (converts screen position to world coordinates)
+            firstTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition); // Store the position where the player first clicks or taps
         }
     }
+
 
     // Handle mouse up event for finalizing touch input
     private void OnMouseUp() {

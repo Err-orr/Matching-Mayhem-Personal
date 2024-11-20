@@ -39,27 +39,27 @@ public class Board : MonoBehaviour
     private BackgroundTile[,] breakableTiles; // 2D array to hold breakable tile references
 
     [Header("Dot Settings")]
-    public GameObject destroyEffect; // Effect to display when a dot is destroyed
-    public Dot currentDot; // Reference to the currently selected dot
-    public GameObject[] dots; // Array of available dot prefabs
-    public GameObject[,] allDots; // 2D array to hold all the dots currently on the board
-    public TileType[] boardLayout; // Array to define the layout of the board
-    private FindMatches findMatches; // Reference to the FindMatches script for detecting matches
-    public int basePieceValue = 20;
-    private int streakValue = 1;
-    private ScoreManager scoreManager;
+    public GameObject destroyEffect; // Effect to display when a dot is destroyed (e.g., animation, particle effect)
+    public Dot currentDot; // Reference to the currently selected dot on the board
+    public GameObject[] dots; // Array of available dot prefabs, each representing a different type of dot
+    public GameObject[,] allDots; // 2D array that holds all the dots currently on the board
+    public TileType[] boardLayout; // Array defining the layout of the board (e.g., background tiles, empty spaces, etc.)
+    private FindMatches findMatches; // Reference to the FindMatches script, used for detecting matching dots
+    public int basePieceValue = 20; // Base score value for each dot (used for scoring)
+    private int streakValue = 1; // Multiplier for consecutive matches (combo streak)
+    private ScoreManager scoreManager; // Reference to the ScoreManager for updating the score
 
 
     // Start is called before the first frame update
     void Start()
     {
-        // Initialize arrays and references
-        scoreManager = FindObjectOfType<ScoreManager>();
-        breakableTiles = new BackgroundTile[width, height];
-        findMatches = FindObjectOfType<FindMatches>(); // Retrieve the FindMatches component from the scene
-        blankSpaces = new bool[width, height]; // Initialize the 2D array for blank spaces
-        allDots = new GameObject[width, height]; // Initialize the 2D array for dots
-        SetUp(); // Set up the board with tiles and randomly placed dots
+        // Initialize references and arrays
+        scoreManager = FindObjectOfType<ScoreManager>(); // Find and cache the ScoreManager in the scene to update the score
+        breakableTiles = new BackgroundTile[width, height]; // Initialize a 2D array to hold the background tiles (e.g., breakable, unbreakable)
+        findMatches = FindObjectOfType<FindMatches>(); // Retrieve the FindMatches component that will handle match logic
+        blankSpaces = new bool[width, height]; // Initialize a 2D array to track which spaces are blank (no dots)
+        allDots = new GameObject[width, height]; // Initialize a 2D array to hold references to the dots in each space on the board
+        SetUp(); // Call SetUp() to initialize the board, place tiles, and randomly populate it with dots
     }
 
     // Generate blank spaces on the board based on the board layout
@@ -85,39 +85,69 @@ public class Board : MonoBehaviour
         }
     }
 
-    // Set up the board by instantiating tiles and randomly placing dots
-    private void SetUp() {
-        GenerateBlankSpaces(); // Create blank spaces
-        GenerateBreakableTiles(); // Create breakable tiles
-        // Loop through each column and row to place tiles and dots
-        for (int i = 0; i < width; i++) { // Loop through each column
-            for (int j = 0; j < height; j++) { // Loop through each row
-                if (!blankSpaces[i, j]) { // Check if the current space is not blank
-                    // Calculate the position for the tile based on its index
-                    UnityEngine.Vector2 tempPosition = new(i, j + offSet); 
+    // Set up the board by instantiating background tiles and randomly placing dots
+    private void SetUp()
+    {
+        // Generate the blank spaces on the board (spaces where no dots will be placed)
+        GenerateBlankSpaces();
+
+        // Generate breakable tiles on the board (if applicable, e.g., destructible tiles)
+        GenerateBreakableTiles();
+
+        // Loop through each column (i) and each row (j) to place tiles and dots
+        for (int i = 0; i < width; i++)
+        { // Loop through each column
+            for (int j = 0; j < height; j++)
+            { // Loop through each row
+              // Check if the current space is not a blank space (i.e., it can hold a tile and dot)
+                if (!blankSpaces[i, j])
+                {
+                    // Calculate the position for the tile and dot based on the column (i) and row (j) indices
+                    // Offset is added to vertical positioning to ensure proper placement
+                    UnityEngine.Vector2 tempPosition = new(i, j + offSet);
                     UnityEngine.Vector2 tilePosition = new UnityEngine.Vector2(i, j);
-                    // Instantiate a new background tile
+
+                    // Instantiate a new background tile at the calculated position
                     GameObject backgroundTile = Instantiate(tilePrefab, tilePosition, UnityEngine.Quaternion.identity);
-                    backgroundTile.transform.parent = this.transform; // Set the parent of the tile to the board for hierarchy organization
-                    backgroundTile.name = "( " + i + ", " + j + " )"; // Name the tile for debugging purposes
-                    
-                    int dotToUse = Random.Range(0, dots.Length); // Randomly select a dot prefab from the array
-                    int maxIterations = 0; // Counter to prevent infinite loops when checking for adjacent matches
 
-                    // Ensure the randomly selected dot does not match existing adjacent dots
-                    while (MatchesAt(i, j, dots[dotToUse]) && maxIterations < 100) {
-                        dotToUse = Random.Range(0, dots.Length); // Select a new dot if it matches
-                        maxIterations++;
+                    // Set the parent of the background tile to the board for hierarchy organization in the scene
+                    backgroundTile.transform.parent = this.transform;
+
+                    // Name the background tile for easier identification and debugging in the hierarchy (coordinates of the tile)
+                    backgroundTile.name = "( " + i + ", " + j + " )";
+
+                    // Randomly select a dot prefab from the available array of dots
+                    int dotToUse = Random.Range(0, dots.Length);
+
+                    // Max iterations to prevent potential infinite loops when checking for adjacent dots
+                    int maxIterations = 0;
+
+                    // Ensure that the randomly selected dot does not create a match with adjacent dots
+                    // Keep selecting a new dot if it causes a match with neighboring dots
+                    while (MatchesAt(i, j, dots[dotToUse]) && maxIterations < 100)
+                    {
+                        dotToUse = Random.Range(0, dots.Length); // Select a new dot if it causes a match
+                        maxIterations++; // Increment the iteration counter
                     }
-                    maxIterations = 0; // Reset counter for potential future use
 
-                    // Instantiate the selected dot and set its position on the board
+                    // Reset the iteration counter to zero for potential future use
+                    maxIterations = 0;
+
+                    // Instantiate the selected dot at the calculated position
                     GameObject dot = Instantiate(dots[dotToUse], tempPosition, UnityEngine.Quaternion.identity);
-                    dot.GetComponent<Dot>().row = j; // Set the row for the dot
-                    dot.GetComponent<Dot>().column = i; // Set the column for the dot
-                    dot.transform.parent = this.transform; // Set the parent of the dot to the board for hierarchy organization
-                    dot.name = "( " + i + ", " + j + " )"; // Name the dot for debugging purposes
-                    allDots[i, j] = dot; // Store the newly created dot in the array
+
+                    // Set the row and column for the dot to help with grid management
+                    dot.GetComponent<Dot>().row = j; // Set the row index for the dot
+                    dot.GetComponent<Dot>().column = i; // Set the column index for the dot
+
+                    // Set the parent of the dot to the board for hierarchy organization in the scene
+                    dot.transform.parent = this.transform;
+
+                    // Name the dot for easier identification and debugging in the hierarchy (coordinates of the dot)
+                    dot.name = "( " + i + ", " + j + " )";
+
+                    // Store the newly instantiated dot in the allDots array at the corresponding position
+                    allDots[i, j] = dot;
                 }
             }
         }
@@ -353,29 +383,49 @@ public class Board : MonoBehaviour
         return false; // No matches found on the board
     }
 
-    // Coroutine to fill the board with new dots after destroying matches
+    // Coroutine to refill the board with new dots after destroying any matches
     private IEnumerator FillBoardCo()
     {
-        RefillBoard(); // Refill the board with new dots after clearing any matches
-        yield return new WaitForSeconds(.2f); // Wait for 0.2 seconds before checking for new matches
-        // Continuously check for new matches on the board and destroy them if found
+        // Refill the board with new dots after clearing the matched dots
+        RefillBoard();
+
+        // Wait for a short period (0.2 seconds) to allow the board to settle before checking for new matches
+        yield return new WaitForSeconds(0.2f);
+
+        // Continuously check for new matches on the board until no more are found
         while (MatchesOnBoard())
         {
+            // Increment the streak value to reward consecutive matches
             streakValue++;
-            yield return new WaitForSeconds(.2f); // Wait before checking for matches again
-            DestroyMatches(); // Destroy any new matches found on the board
+
+            // Wait briefly (0.2 seconds) before rechecking for any matches
+            yield return new WaitForSeconds(0.2f);
+
+            // Destroy any new matches found on the board
+            DestroyMatches();
         }
-        findMatches.currentMatches.Clear(); // Clear the list of matches after refilling
-        yield return new WaitForSeconds(.2f); // Wait briefly before allowing player moves again
-        // If the board is deadlocked, shuffle it to ensure more valid moves
+
+        // After processing matches, clear the list of currently detected matches in the FindMatches component
+        findMatches.currentMatches.Clear();
+
+        // Wait briefly (0.2 seconds) before allowing the player to make moves again
+        yield return new WaitForSeconds(0.2f);
+
+        // If the board is deadlocked (no valid moves are available), shuffle the board to create new possibilities
         if (IsDeadlocked())
         {
-            ShuffleBoard();
-            Debug.Log("Deadlocked!!! :D"); // Log that the board was shuffled due to deadlock
+            ShuffleBoard(); // Shuffle the board to prevent deadlock
+            Debug.Log("Deadlocked!!! :D"); // Log that the board was shuffled due to a deadlock situation
         }
-        currentState = GameState.move; // Set the game state to allow player to make moves again
+
+        // After all matches are cleared and the board is refilled or shuffled, set the game state back to 'move'
+        // This allows the player to start making moves again
+        currentState = GameState.move;
+
+        // Reset the streak value to 1, as the player starts a new sequence of moves
         streakValue = 1;
     }
+
 
     // Switch the positions of two dots on the board
     private void SwitchPieces(int column, int row, UnityEngine.Vector2 direction)

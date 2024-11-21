@@ -6,13 +6,15 @@ using UnityEngine.Tilemaps;
 using UnityEngine.UIElements;
 
 // Enum to represent the current state of the game
-public enum GameState {
+public enum GameState
+{
     wait, // The game is waiting for a player action
     move  // The game is ready for player movement
 }
 
 // Enum to define different types of tiles
-public enum TileKind {
+public enum TileKind
+{
     Breakable, // A tile that can be destroyed
     Blank,     // An empty space on the board
     Normal     // A standard tile
@@ -20,7 +22,8 @@ public enum TileKind {
 
 // Class to represent the type of tile with its position and kind
 [System.Serializable]
-public class TileType {
+public class TileType
+{
     public int x; // X coordinate of the tile
     public int y; // Y coordinate of the tile
     public TileKind tileKind; // Type of the tile
@@ -69,18 +72,24 @@ public class Board : MonoBehaviour
     }
 
     // Generate blank spaces on the board based on the board layout
-    public void GenerateBlankSpaces() {
-        for (int i = 0; i < boardLayout.Length; i++) {
-            if (boardLayout[i].tileKind == TileKind.Blank) {
+    public void GenerateBlankSpaces()
+    {
+        for (int i = 0; i < boardLayout.Length; i++)
+        {
+            if (boardLayout[i].tileKind == TileKind.Blank)
+            {
                 blankSpaces[boardLayout[i].x, boardLayout[i].y] = true; // Mark space as blank
             }
         }
     }
 
     // Generate breakable tiles on the board based on the board layout
-    public void GenerateBreakableTiles() {
-        for (int i = 0; i < boardLayout.Length; i++) {
-            if (boardLayout[i].tileKind == TileKind.Breakable) {
+    public void GenerateBreakableTiles()
+    {
+        for (int i = 0; i < boardLayout.Length; i++)
+        {
+            if (boardLayout[i].tileKind == TileKind.Breakable)
+            {
                 // Set the position for the breakable tile
                 UnityEngine.Vector2 tempPosition = new UnityEngine.Vector2(boardLayout[i].x, boardLayout[i].y);
                 // Instantiate the breakable tile prefab at the designated position
@@ -160,35 +169,49 @@ public class Board : MonoBehaviour
     }
 
     // Check if the current position has matching dots
-    private bool MatchesAt(int column, int row, GameObject piece) {
+    private bool MatchesAt(int column, int row, GameObject piece)
+    {
         // Check for horizontal and vertical matches
-        if (column > 1 && row > 1) {
+        if (column > 1 && row > 1)
+        {
             // Check for a horizontal match with the two dots to the left
-            if (allDots[column - 1, row] != null && allDots[column - 2, row] != null) {
-                if (allDots[column - 1, row].tag == piece.tag && allDots[column - 2, row].tag == piece.tag) {
+            if (allDots[column - 1, row] != null && allDots[column - 2, row] != null)
+            {
+                if (allDots[column - 1, row].tag == piece.tag && allDots[column - 2, row].tag == piece.tag)
+                {
                     return true; // Found a horizontal match
                 }
             }
             // Check for a vertical match with the two dots above
-            if (allDots[column, row - 1] != null && allDots[column, row - 2] != null) {
-                if (allDots[column, row - 1].tag == piece.tag && allDots[column, row - 2].tag == piece.tag) {
+            if (allDots[column, row - 1] != null && allDots[column, row - 2] != null)
+            {
+                if (allDots[column, row - 1].tag == piece.tag && allDots[column, row - 2].tag == piece.tag)
+                {
                     return true; // Found a vertical match
                 }
             }
-        } else if (column <= 1 || row <= 1) {
+        }
+        else if (column <= 1 || row <= 1)
+        {
             // Handle edge cases where the dot is near the edge of the board
-            if (row > 1) {
+            if (row > 1)
+            {
                 // Check for a vertical match with the two dots above
-                if (allDots[column, row - 1] != null && allDots[column, row - 2] != null) {
-                    if (allDots[column, row - 1].tag == piece.tag && allDots[column, row - 2].tag == piece.tag) {
+                if (allDots[column, row - 1] != null && allDots[column, row - 2] != null)
+                {
+                    if (allDots[column, row - 1].tag == piece.tag && allDots[column, row - 2].tag == piece.tag)
+                    {
                         return true; // Found a vertical match
                     }
                 }
             }
-            if (column > 1) {
+            if (column > 1)
+            {
                 // Check for a horizontal match with the two dots to the left
-                if (allDots[column - 1, row] != null && allDots[column - 2, row] != null) {
-                    if (allDots[column - 1, row].tag == piece.tag && allDots[column - 2, row].tag == piece.tag) {
+                if (allDots[column - 1, row] != null && allDots[column - 2, row] != null)
+                {
+                    if (allDots[column - 1, row].tag == piece.tag && allDots[column - 2, row].tag == piece.tag)
+                    {
                         return true; // Found a horizontal match
                     }
                 }
@@ -198,21 +221,26 @@ public class Board : MonoBehaviour
     }
 
     // Determine if the current matches are in a single row or column
-    private bool ColumnOrRow() {
+    private bool ColumnOrRow()
+    {
         int numberHorizontal = 0; // Counter for horizontal matches
         int numberVertical = 0; // Counter for vertical matches
         Dot firstPiece = findMatches.currentMatches[0].GetComponent<Dot>(); // Get the first matched dot
 
-        if (firstPiece != null) {
+        if (firstPiece != null)
+        {
             // Iterate through all matched pieces to count their orientation
-            foreach (GameObject currentPiece in findMatches.currentMatches) {
+            foreach (GameObject currentPiece in findMatches.currentMatches)
+            {
                 Dot dot = currentPiece.GetComponent<Dot>();
                 // Increment horizontal count if dots are in the same row
-                if (dot.row == firstPiece.row) {
+                if (dot.row == firstPiece.row)
+                {
                     numberHorizontal++;
                 }
                 // Increment vertical count if dots are in the same column
-                if (dot.column == firstPiece.column) {
+                if (dot.column == firstPiece.column)
+                {
                     numberVertical++;
                 }
             }
@@ -222,27 +250,39 @@ public class Board : MonoBehaviour
     }
 
     // Check if any bombs need to be created based on current matches
-    private void CheckToMakeBombs() {
+    private void CheckToMakeBombs()
+    {
         // Handle bomb creation for specific match counts
-        if (findMatches.currentMatches.Count == 4 || findMatches.currentMatches.Count == 7) {
+        if (findMatches.currentMatches.Count == 4 || findMatches.currentMatches.Count == 7)
+        {
             findMatches.CheckBombs(); // Check for any bomb effects based on matches
         }
-        
+
         // Check for potential color bomb creation based on the number of matches
-        if (findMatches.currentMatches.Count == 5 || findMatches.currentMatches.Count == 8) {
-            if (ColumnOrRow()) { // If matches are in a line
-                if (currentDot != null) {
+        if (findMatches.currentMatches.Count == 5 || findMatches.currentMatches.Count == 8)
+        {
+            if (ColumnOrRow())
+            { // If matches are in a line
+                if (currentDot != null)
+                {
                     // Create a color bomb if the current dot is matched and not already a color bomb
-                    if (currentDot.isMatched) {
-                        if (!currentDot.isColorBomb) {
+                    if (currentDot.isMatched)
+                    {
+                        if (!currentDot.isColorBomb)
+                        {
                             currentDot.isMatched = false; // Reset matched status
                             currentDot.MakeColorBomb(); // Create a color bomb
                         }
-                    } else { // Check the other dot in case it is matched
-                        if (currentDot.otherDot != null) {
+                    }
+                    else
+                    { // Check the other dot in case it is matched
+                        if (currentDot.otherDot != null)
+                        {
                             Dot otherDot = currentDot.otherDot.GetComponent<Dot>();
-                            if (otherDot.isMatched) {
-                                if (!otherDot.isColorBomb) {
+                            if (otherDot.isMatched)
+                            {
+                                if (!otherDot.isColorBomb)
+                                {
                                     otherDot.isMatched = false; // Reset matched status
                                     otherDot.MakeColorBomb(); // Create a color bomb
                                 }
@@ -250,19 +290,29 @@ public class Board : MonoBehaviour
                         }
                     }
                 }
-            } else { // If matches are not in a line, check for adjacent bomb creation
-                if (currentDot != null) {
+            }
+            else
+            { // If matches are not in a line, check for adjacent bomb creation
+                if (currentDot != null)
+                {
                     // Create an adjacent bomb if the current dot is matched and not already an adjacent bomb
-                    if (currentDot.isMatched) {
-                        if (!currentDot.isAdjacentBomb) {
+                    if (currentDot.isMatched)
+                    {
+                        if (!currentDot.isAdjacentBomb)
+                        {
                             currentDot.isMatched = false; // Reset matched status
                             currentDot.MakeAdjacentBomb(); // Create an adjacent bomb
                         }
-                    } else { // Check the other dot for adjacent bomb creation
-                        if (currentDot.otherDot != null) {
+                    }
+                    else
+                    { // Check the other dot for adjacent bomb creation
+                        if (currentDot.otherDot != null)
+                        {
                             Dot otherDot = currentDot.otherDot.GetComponent<Dot>();
-                            if (otherDot.isMatched) {
-                                if (!otherDot.isAdjacentBomb) {
+                            if (otherDot.isMatched)
+                            {
+                                if (!otherDot.isAdjacentBomb)
+                                {
                                     otherDot.isMatched = false; // Reset matched status
                                     otherDot.MakeAdjacentBomb(); // Create an adjacent bomb
                                 }
@@ -275,39 +325,62 @@ public class Board : MonoBehaviour
     }
 
     // Destroy matched dots at the specified column and row
-    private void DestroyMatchesAt(int column, int row) {
-        // Check if the dot at the given position is marked as matched
-        if (allDots[column, row].GetComponent<Dot>().isMatched) {
-            // Check for special match conditions (e.g., if there are 4 or more matches)
-            if (findMatches.currentMatches.Count >= 4) {
-                CheckToMakeBombs(); // Handle bomb creation if applicable
+    private void DestroyMatchesAt(int column, int row)
+    {
+        // Check if the dot at the given position is marked as "matched"
+        if (allDots[column, row].GetComponent<Dot>().isMatched)
+        {
+            // If there are 4 or more matched dots (a special match), check if bombs should be created
+            if (findMatches.currentMatches.Count >= 4)
+            {
+                CheckToMakeBombs(); // Create bombs or power-ups for larger matches
             }
-            
-            // If there is a breakable tile at the current position, apply damage
-            if (breakableTiles[column, row] != null) {
-                breakableTiles[column, row].TakeDamage(1); // Inflict damage on the breakable tile
-                // If the tile has no hit points left, remove its reference
-                if (breakableTiles[column, row].hitPoints <= 0) {
-                    breakableTiles[column, row] = null; // Clear the reference if destroyed
+
+            // Check if there is a breakable tile at the current position
+            if (breakableTiles[column, row] != null)
+            {
+                // Apply damage to the breakable tile (e.g., it may get destroyed after several hits)
+                breakableTiles[column, row].TakeDamage(1);
+
+                // If the breakable tile has no hit points left, remove the reference to it from the board
+                if (breakableTiles[column, row].hitPoints <= 0)
+                {
+                    breakableTiles[column, row] = null; // Nullify the reference if the tile is destroyed
                 }
             }
-            if (soundManager != null) {
-                soundManager.PlayRandomDestroyNoise();
+
+            // Play a sound effect for the destruction (if the sound manager exists)
+            if (soundManager != null)
+            {
+                soundManager.PlayRandomDestroyNoise(); // Play a random destruction sound from the SoundManager
             }
-            // Instantiate a destruction effect at the matched dot's position
+
+            // Instantiate the destruction effect at the position of the matched dot
             GameObject particle = Instantiate(destroyEffect, allDots[column, row].transform.position, UnityEngine.Quaternion.identity);
-            Destroy(particle, .5f); // Destroy the effect after 0.5 seconds
-            Destroy(allDots[column, row]); // Remove the matched dot from the board
+
+            // Destroy the particle effect after 0.5 seconds to clean up the scene
+            Destroy(particle, 0.5f);
+
+            // Remove the matched dot from the board by destroying its GameObject
+            Destroy(allDots[column, row]);
+
+            // Update the score by multiplying the base score value by the streak value for combos
             scoreManager.IncreaseScore(basePieceValue * streakValue);
-            allDots[column, row] = null; // Set the array position to null for cleanup
+
+            // Set the array position to null for cleanup, ensuring the space is free for new dots
+            allDots[column, row] = null;
         }
     }
 
     // Loop through the entire board and destroy all matched dots
-    public void DestroyMatches() {
-        for (int i = 0; i < width; i++) { // Iterate through each column
-            for (int j = 0; j < height; j++) { // Iterate through each row
-                if (allDots[i, j] != null) {
+    public void DestroyMatches()
+    {
+        for (int i = 0; i < width; i++)
+        { // Iterate through each column
+            for (int j = 0; j < height; j++)
+            { // Iterate through each row
+                if (allDots[i, j] != null)
+                {
                     DestroyMatchesAt(i, j); // Check and destroy matches at each position
                 }
             }
@@ -317,15 +390,21 @@ public class Board : MonoBehaviour
     }
 
     // Coroutine to handle adjusting rows when dots are destroyed
-    private IEnumerator DecreaseRowCo2() {
+    private IEnumerator DecreaseRowCo2()
+    {
         // Loop through each column
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
                 // Check for blank spaces and null dots
-                if (!blankSpaces[i, j] && allDots[i, j] == null) {
+                if (!blankSpaces[i, j] && allDots[i, j] == null)
+                {
                     // Move dots down to fill the empty space
-                    for (int k = j + 1; k < height; k++) {
-                        if (allDots[i, k] != null) {
+                    for (int k = j + 1; k < height; k++)
+                    {
+                        if (allDots[i, k] != null)
+                        {
                             // Update the dot's row to the new position
                             allDots[i, k].GetComponent<Dot>().row = j;
                             allDots[i, k] = null; // Set the original position to null
@@ -340,13 +419,19 @@ public class Board : MonoBehaviour
     }
 
     // Coroutine to handle adjusting rows when dots are destroyed
-    private IEnumerator DecreaseRowCo() {
+    private IEnumerator DecreaseRowCo()
+    {
         int nullCount = 0; // Count of null dots in a column
-        for (int i = 0; i < width; i++) { // Iterate through each column
-            for (int j = 0; j < height; j++) { // Iterate through each row
-                if (allDots[i, j] == null) {
+        for (int i = 0; i < width; i++)
+        { // Iterate through each column
+            for (int j = 0; j < height; j++)
+            { // Iterate through each row
+                if (allDots[i, j] == null)
+                {
                     nullCount++; // Increment count of null positions
-                } else if (nullCount > 0) {
+                }
+                else if (nullCount > 0)
+                {
                     // Move existing dots down by the number of nulls above them
                     allDots[i, j].GetComponent<Dot>().row -= nullCount; // Update the row position of the dot
                     allDots[i, j] = null; // Set the current position to null
@@ -359,22 +444,27 @@ public class Board : MonoBehaviour
     }
 
     // Refill the board with new dots in null positions
-    private void RefillBoard() {
-        for (int i = 0; i < width; i++) { // Iterate through each column
-            for (int j = 0; j < height; j++) { // Iterate through each row
+    private void RefillBoard()
+    {
+        for (int i = 0; i < width; i++)
+        { // Iterate through each column
+            for (int j = 0; j < height; j++)
+            { // Iterate through each row
                 // Check for empty positions that are not blank spaces
-                if (allDots[i, j] == null && !blankSpaces[i, j]) {
+                if (allDots[i, j] == null && !blankSpaces[i, j])
+                {
                     // Set the new position for the dot
-                    UnityEngine.Vector2 tempPosition = new UnityEngine.Vector2(i, j + offSet); 
+                    UnityEngine.Vector2 tempPosition = new UnityEngine.Vector2(i, j + offSet);
                     int dotToUse = Random.Range(0, dots.Length); // Randomly select a dot prefab
                     int maxIterations = 0;
-                    while (MatchesAt(i, j, dots[dotToUse]) && maxIterations < 100) {
+                    while (MatchesAt(i, j, dots[dotToUse]) && maxIterations < 100)
+                    {
                         maxIterations++;
                         dotToUse = Random.Range(0, dots.Length); // Randomly select a dot prefab
                     }
                     maxIterations = 0;
                     // Instantiate a new dot at the calculated position
-                    GameObject piece = Instantiate(dots[dotToUse], tempPosition, UnityEngine.Quaternion.identity); 
+                    GameObject piece = Instantiate(dots[dotToUse], tempPosition, UnityEngine.Quaternion.identity);
                     allDots[i, j] = piece; // Store the new dot in the array
                     piece.GetComponentInParent<Dot>().row = j; // Set the dot's row
                     piece.GetComponentInParent<Dot>().column = i; // Set the dot's column
@@ -384,11 +474,16 @@ public class Board : MonoBehaviour
     }
 
     // Check if there are any matches currently present on the board
-    private bool MatchesOnBoard() {
-        for (int i = 0; i < width; i++) { // Iterate through each column
-            for (int j = 0; j < height; j++) { // Iterate through each row
-                if (allDots[i, j] != null) { // Check for a valid dot
-                    if (allDots[i, j].GetComponent<Dot>().isMatched) {
+    private bool MatchesOnBoard()
+    {
+        for (int i = 0; i < width; i++)
+        { // Iterate through each column
+            for (int j = 0; j < height; j++)
+            { // Iterate through each row
+                if (allDots[i, j] != null)
+                { // Check for a valid dot
+                    if (allDots[i, j].GetComponent<Dot>().isMatched)
+                    {
                         return true; // A match has been found
                     }
                 }
@@ -414,7 +509,7 @@ public class Board : MonoBehaviour
             // Destroy any new matches found on the board
             DestroyMatches();
             // Wait briefly (0.2 seconds) before rechecking for any matches
-            yield return new WaitForSeconds(2 * refillDelay);            
+            yield return new WaitForSeconds(2 * refillDelay);
         }
 
         // After processing matches, clear the list of currently detected matches in the FindMatches component
